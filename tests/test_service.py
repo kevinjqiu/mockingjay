@@ -38,13 +38,13 @@ def test_parse_endpoint_invalid_format():
     yield assert_invalid_format, "GET /v1/users "
 
 
-# class TestMockingjay(object):
+class TestMockingjay(object):
 
-#     def test_post_without_header_match(self):
-#         service = MockService('http://localhost:1234')
-#         service.endpoint('POST /user') \
-#             .should_return(200, {}, '{}') \
-#             .register()
-#         service.start()
-#         response = requests.post('/user')
-#         assert response.body == '{}'
+    @httpretty.activate
+    def test_post_without_header_match(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('POST /user') \
+            .should_return(200, {}, '{}') \
+            .register()
+        response = requests.post('http://localhost:1234/user')
+        assert response.text == u'{}'

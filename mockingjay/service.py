@@ -32,12 +32,4 @@ class MockService(object):
         method, endpoint = _parse_endpoint(endpoint)
         return EndpointMockBuilder(
             method,
-            '/'.join([self.service_prefix, endpoint]))
-
-    def start(self):
-        httpretty.enable()
-
-    def stop(self, reset=True):
-        httpretty.disable()
-        if reset:
-            httpretty.reset()
+            self.service_prefix + endpoint)

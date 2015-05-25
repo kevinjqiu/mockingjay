@@ -12,6 +12,8 @@ class EndpointMockBuilder(object):
         self.return_code = code
         self.return_headers = headers
         self.return_body = body
+        return self
 
     def register(self):
-        httpretty.register_uri
+        httpretty.register_uri(
+            self.method, self.endpoint, body=self.return_body)

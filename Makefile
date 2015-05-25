@@ -38,7 +38,7 @@ lint:
 	flake8 mockingjay tests
 
 test:
-	py.test tests/
+	py.test -s tests/
 
 test-all:
 	tox
