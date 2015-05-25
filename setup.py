@@ -14,12 +14,11 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
-requirements = [
-    # TODO: put package requirements here
-]
+requirements = open('requirements.txt').readlines()
 
 test_requirements = [
-    # TODO: put package test requirements here
+    line for line in open('requirements-dev.txt').readlines()
+    if not line.startswith('-')
 ]
 
 setup(
