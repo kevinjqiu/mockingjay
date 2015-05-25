@@ -15,7 +15,7 @@ from mockingjay.service import (
 
 def test_parse_endpoint_valid_format():
     def assert_valid_format(spec, method, endpoint):
-        method, endpt = _parse_endpoint("get /v1/users")
+        method, endpt = _parse_endpoint(spec)
         assert method == method
         assert endpt == endpoint
 
@@ -30,12 +30,10 @@ def test_parse_endpoint_valid_format():
 def test_parse_endpoint_invalid_format():
     def assert_invalid_format(spec):
         with pytest.raises(InvalidEndpointSpecException):
-            _parse_endpoint("get /v1/ users")
+            _parse_endpoint(spec)
 
     yield assert_invalid_format, "get /v1/ users"
     yield assert_invalid_format, "GOT /v1/users"
-    yield assert_invalid_format, "GET /v1/users "
-    yield assert_invalid_format, "GET /v1/users "
 
 
 class TestMockingjay(object):

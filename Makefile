@@ -44,7 +44,7 @@ test-all:
 	tox
 
 coverage:
-	py.test --cov mockingjay --cov tests tests/
+	py.test --cov-report term-missing --cov mockingjay --cov tests tests/
 
 docs:
 	rm -f docs/mockingjay.rst
