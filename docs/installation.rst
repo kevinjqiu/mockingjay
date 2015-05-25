@@ -4,7 +4,7 @@ Installation
 
 At the command line::
 
-    $ easy_install mockingjay
+    $ pip install mockingjay
 
 Or, if you have virtualenvwrapper installed::
 

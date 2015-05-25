@@ -14,7 +14,9 @@ A simple library to build mock http services based on HTTPretty
 * Free software: BSD license
 * Documentation: https://mockingjay.readthedocs.org.
 
-Features
---------
 
-* TODO
+Features
+========
+
+* Provides a fluent interface for building service mocks using HTTPretty
+* Allows mocking of response body using templated fixtures
