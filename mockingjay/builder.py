@@ -2,11 +2,12 @@ import httpretty
 
 
 class EndpointMockBuilder(object):
-    def __init__(self, method, endpoint, default_headers):
+    def __init__(self, method, endpoint, default_headers, fixture_loader):
         self.method, self.endpoint = method, endpoint
         self.return_code = 200
         self.return_headers = default_headers or {}
         self.return_body = None
+        self.fixture_loader = fixture_loader
 
     def should_return(self, code, headers, body):
         self.return_code = code
@@ -24,6 +25,11 @@ class EndpointMockBuilder(object):
 
     def should_return_body(self, body):
         self.return_body = body
+        return self
+
+    def should_return_body_from_fixture(self, template_file, **params):
+        assert self.fixture_loader is not None, "fixture_loader not set"
+        self.return_body = self.fixture_loader.render(template_file, **params)
         return self
 
     def register(self):

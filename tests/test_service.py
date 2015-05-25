@@ -8,6 +8,7 @@ Tests for `mockingjay` module.
 import requests
 import httpretty
 import pytest
+import os.path
 
 from mockingjay.service import (
     MockService, _parse_endpoint, InvalidEndpointSpecException)
@@ -86,3 +87,24 @@ class TestMockingjay(object):
         response = requests.get('http://localhost:1234/me')
         assert response.json() == {'me': 'ok'}
         assert response.headers['content-type'] == 'application/json'
+
+    @httpretty.activate
+    def test_get_return_using_fixture_template(self):
+        service = MockService('http://localhost:1234',
+                              fixture_root=os.path.join(
+                                  os.path.dirname(__file__),
+                                  'fixtures'))
+        service.endpoint('GET /user/1') \
+            .should_return_body_from_fixture(
+                'user.jinja', customer_id=1, email='foo@example.com') \
+            .should_return_header('content_type', 'application/json') \
+            .register()
+        response = requests.get('http://localhost:1234/user/1')
+        assert response.json() == {
+            'object': 'customer',
+            'created': 1432484442,
+            'id': '1',
+            'description': 'customer',
+            'email': 'foo@example.com',
+            'delinquent': False,
+        }

@@ -1,5 +1,7 @@
 import httpretty
+
 from .builder import EndpointMockBuilder
+from .fixture_loader import Jinja2FixtureLoader
 
 
 class InvalidEndpointSpecException(StandardError):
@@ -24,11 +26,17 @@ def _parse_endpoint(spec):
 
 
 class MockService(object):
-    def __init__(self, service_prefix, default_headers=None):
+    def __init__(
+            self, service_prefix, default_headers=None, fixture_root=None):
         self.service_prefix = service_prefix
         self.default_headers = default_headers
+        if fixture_root is not None:
+            self.fixture_loader = Jinja2FixtureLoader(fixture_root)
+        else:
+            self.fixture_loader = None
 
     def endpoint(self, endpoint):
         method, endpoint = _parse_endpoint(endpoint)
         return EndpointMockBuilder(
-            method, self.service_prefix + endpoint, self.default_headers)
+            method, self.service_prefix + endpoint,
+            self.default_headers, self.fixture_loader)
