@@ -4,7 +4,7 @@ from .builder import EndpointMockBuilder
 from .fixture_loader import Jinja2FixtureLoader
 
 
-class InvalidEndpointSpecException(StandardError):
+class InvalidEndpointSpecException(Exception):
     pass
 
 
