@@ -1,3 +1,4 @@
+import json
 import httpretty
 
 
@@ -30,6 +31,10 @@ class EndpointMockBuilder(object):
     def should_return_body_from_fixture(self, template_file, **params):
         assert self.fixture_loader is not None, "fixture_loader not set"
         self.return_body = self.fixture_loader.render(template_file, **params)
+        return self
+
+    def should_return_json(self, json_object):
+        self.return_body = json.dumps(json_object)
         return self
 
     def register(self):
