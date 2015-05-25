@@ -118,3 +118,14 @@ class TestMockingjay(object):
             .register()
         response = requests.get('http://localhost:1234/user/1')
         assert response.status_code == 404
+
+    @httpretty.activate
+    def test_get_return_mock_response_using_object(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('GET /user/1') \
+            .should_return_code(404) \
+            .should_return_json({'error': 'not found'}) \
+            .register()
+        response = requests.get('http://localhost:1234/user/1')
+        assert response.status_code == 404
+        assert response.json() == {'error': 'not found'}
