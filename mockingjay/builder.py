@@ -40,4 +40,4 @@ class EndpointMockBuilder(object):
     def register(self):
         httpretty.register_uri(
             self.method, self.endpoint, body=self.return_body,
-            adding_headers=self.return_headers)
+            adding_headers=self.return_headers, status=self.return_code)
