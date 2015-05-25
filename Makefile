@@ -44,10 +44,7 @@ test-all:
 	tox
 
 coverage:
-	coverage run --source mockingjay setup.py test
-	coverage report -m
-	coverage html
-	open htmlcov/index.html
+	py.test --cov mockingjay --cov tests tests/
 
 docs:
 	rm -f docs/mockingjay.rst

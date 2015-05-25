@@ -2,7 +2,6 @@ import httpretty
 from .builder import EndpointMockBuilder
 
 
-
 class InvalidEndpointSpecException(StandardError):
     pass
 
@@ -25,11 +24,11 @@ def _parse_endpoint(spec):
 
 
 class MockService(object):
-    def __init__(self, service_prefix):
+    def __init__(self, service_prefix, default_headers=None):
         self.service_prefix = service_prefix
+        self.default_headers = default_headers
 
     def endpoint(self, endpoint):
         method, endpoint = _parse_endpoint(endpoint)
         return EndpointMockBuilder(
-            method,
-            self.service_prefix + endpoint)
+            method, self.service_prefix + endpoint, self.default_headers)

@@ -48,3 +48,43 @@ class TestMockingjay(object):
             .register()
         response = requests.post('http://localhost:1234/user')
         assert response.text == u'{}'
+
+    @httpretty.activate
+    def test_get_return_using_build(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('GET /me') \
+            .should_return_header('Content-Type', 'application/json') \
+            .should_return_code(200) \
+            .should_return_body('{"me": "ok"}') \
+            .register()
+
+        response = requests.get('http://localhost:1234/me')
+        assert response.json() == {'me': 'ok'}
+        assert response.headers['content-type'] == 'application/json'
+
+    @httpretty.activate
+    def test_get_return_using_build_with_default_headers(self):
+        service = MockService('http://localhost:1234',
+                              {'content-type': 'application/vnd+jsonapi'})
+        service.endpoint('GET /me') \
+            .should_return_code(200) \
+            .should_return_body('{"me": "ok"}') \
+            .register()
+
+        response = requests.get('http://localhost:1234/me')
+        assert response.json() == {'me': 'ok'}
+        assert response.headers['content-type'] == 'application/vnd+jsonapi'
+
+    @httpretty.activate
+    def test_get_return_using_build_with_default_header_is_overriden(self):
+        service = MockService('http://localhost:1234',
+                              {'content-type': 'application/vnd+jsonapi'})
+        service.endpoint('GET /me') \
+            .should_return_header('content-type', 'application/json') \
+            .should_return_code(200) \
+            .should_return_body('{"me": "ok"}') \
+            .register()
+
+        response = requests.get('http://localhost:1234/me')
+        assert response.json() == {'me': 'ok'}
+        assert response.headers['content-type'] == 'application/json'
