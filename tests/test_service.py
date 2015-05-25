@@ -108,3 +108,13 @@ class TestMockingjay(object):
             'email': 'foo@example.com',
             'delinquent': False,
         }
+
+    @httpretty.activate
+    def test_get_return_alternate_return_status(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('GET /user/1') \
+            .should_return_code(404) \
+            .should_return_body('{}') \
+            .register()
+        response = requests.get('http://localhost:1234/user/1')
+        assert response.status_code == 404
