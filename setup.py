@@ -23,7 +23,7 @@ test_requirements = [
 
 setup(
     name='mockingjay',
-    version='0.1.0',
+    version='0.1.1',
     description="A simple library to build mock http services based on HTTPretty",
     long_description=readme + '\n\n' + history,
     author="Kevin J. Qiu",
