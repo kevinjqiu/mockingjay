@@ -2,7 +2,7 @@
 mockingjay
 ===============================
 
-.. image:: https://img.shields.io/travis/kevinjqiu/mockingjay.svg
+.. image:: https://travis-ci.org/kevinjqiu/mockingjay.svg?branch=master
         :target: https://travis-ci.org/kevinjqiu/mockingjay
 
 .. image:: https://img.shields.io/pypi/v/mockingjay.svg
