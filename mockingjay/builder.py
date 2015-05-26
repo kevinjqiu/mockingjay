@@ -7,6 +7,9 @@ class HeaderMatcher(object):
         self.key = key
         self.value = value
 
+    def assert_request_matched(self, request):
+        assert request.headers.get(self.key) == self.value
+
 
 class EndpointMockBuilder(object):
     def __init__(self, method, endpoint, default_headers, fixture_loader):
@@ -52,3 +55,10 @@ class EndpointMockBuilder(object):
         httpretty.register_uri(
             self.method, self.endpoint, body=self.return_body,
             adding_headers=self.return_headers, status=self.return_code)
+
+    def matches(self, request):
+        """
+        Returns ``True`` if the request satisfies all matchers
+        """
+        for matcher in self.matchers:
+            matcher.assert_request_matched(request)

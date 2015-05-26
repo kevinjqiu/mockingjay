@@ -25,6 +25,28 @@ def _parse_endpoint(spec):
         raise InvalidEndpointSpecException()
 
 
+def _get_host_from_raw_request(raw_request):
+    for line in raw_request.splitlines():
+        try:
+            key, value = line.split(':', 1)
+        except ValueError:
+            pass
+        else:
+            if key == 'Host':
+                return value.strip()
+    return None
+
+
+def _get_scheme_from_protocol_version(protocol_version):
+    return protocol_version.split('/')[0].lower()
+
+
+def _get_service_prefix_from_request(request):
+    return "%s://%s" % (
+        _get_scheme_from_protocol_version(request.protocol_version),
+        _get_host_from_raw_request(request.raw_headers))
+
+
 class MockService(object):
     def __init__(
             self, service_prefix, default_headers=None, fixture_root=None):
@@ -55,5 +77,18 @@ class MockService(object):
         self.endpoints.clear()
 
     def assert_request_matched(self):
-        requests = httpretty.httpretty.latest_requests
-        assert False  # TODO
+        requests = [
+            request for request in httpretty.httpretty.latest_requests
+            if _get_service_prefix_from_request(request) == self.service_prefix
+        ]
+        for endpoint in self.endpoints:
+            requests = [
+                request for request in requests
+                if "%s%s" % (
+                    _get_service_prefix_from_request(request),
+                    request.path) == endpoint.endpoint
+                and request.method == endpoint.method
+            ]
+
+            for request in requests:
+                endpoint.matches(request)

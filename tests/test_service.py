@@ -11,7 +11,8 @@ import pytest
 import os.path
 
 from mockingjay.service import (
-    MockService, _parse_endpoint, InvalidEndpointSpecException)
+    MockService, _parse_endpoint, _get_host_from_raw_request,
+    InvalidEndpointSpecException)
 
 
 def test_parse_endpoint_valid_format():
@@ -35,6 +36,20 @@ def test_parse_endpoint_invalid_format():
 
     yield assert_invalid_format, "get /v1/ users"
     yield assert_invalid_format, "GOT /v1/users"
+
+
+def test_get_host_from_raw_request():
+    raw_request = (
+        "POST /user HTTP/1.1\r\n"
+        "Host: localhost:1234\r\n"
+        "Accpet: application/json\r\n"
+        "Content-Length: 0\r\n"
+        "Accept-Encoding: gzip, deflate, compress\r\n"
+        "Accept: */*\r\n"
+        "User-Agent: python-requests/2.2.1 CPython/2.7.3 Linux/2.6.18-308.el5"
+    )
+
+    assert 'localhost:1234' == _get_host_from_raw_request(raw_request)
 
 
 class TestResponseBuilder(object):
@@ -115,9 +130,21 @@ class TestRequestMatcher(object):
     def test_request_header_match(self):
         service = MockService('http://localhost:1234')
         service.endpoint('POST /user') \
-            .with_header('accept', 'application/json') \
+            .with_header('X-CorrelationId', 'abcd') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
-                      headers={'Accpet': 'application/json'})
+                      headers={'X-CorrelationId': 'abcd'})
         service.assert_request_matched()
+
+    @httpretty.activate
+    def test_request_header_not_match(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('POST /user') \
+            .with_header('X-CorrelationId', 'abcd') \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      headers={'X-CorrelationId': 'beef'})
+        with pytest.raises(AssertionError):
+            service.assert_request_matched()
