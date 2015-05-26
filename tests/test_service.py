@@ -37,7 +37,7 @@ def test_parse_endpoint_invalid_format():
     yield assert_invalid_format, "GOT /v1/users"
 
 
-class TestMockingjay(object):
+class TestResponseBuilder(object):
 
     @httpretty.activate
     def test_post_without_header_match(self):
@@ -108,3 +108,14 @@ class TestMockingjay(object):
             'email': 'foo@example.com',
             'delinquent': False,
         }
+
+
+class TestRequestMatcher(object):
+    @httpretty.activate
+    def test_request_header_match(self):
+        service = MockService('http://localhost:1234')
+        service.endpoint('POST /user') \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user')
+        service.assert_request_matched()
