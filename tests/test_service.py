@@ -115,7 +115,9 @@ class TestRequestMatcher(object):
     def test_request_header_match(self):
         service = MockService('http://localhost:1234')
         service.endpoint('POST /user') \
+            .with_header('accept', 'application/json') \
             .should_return(200, {}, '{}') \
             .register()
-        requests.post('http://localhost:1234/user')
+        requests.post('http://localhost:1234/user',
+                      headers={'Accpet': 'application/json'})
         service.assert_request_matched()

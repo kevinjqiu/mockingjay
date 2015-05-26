@@ -35,8 +35,25 @@ class MockService(object):
         else:
             self.fixture_loader = None
 
+        self.endpoints = []
+
     def endpoint(self, endpoint):
+        """
+        Create an EndpointMockBuilder object based on the given endpoint
+        """
         method, endpoint = _parse_endpoint(endpoint)
-        return EndpointMockBuilder(
+        retval = EndpointMockBuilder(
             method, self.service_prefix + endpoint,
             self.default_headers, self.fixture_loader)
+        self.endpoints.append(retval)
+        return retval
+
+    def clear_mocks(self):
+        """
+        Clear the endpoint mocks that have been registered for the service
+        """
+        self.endpoints.clear()
+
+    def assert_request_matched(self):
+        requests = httpretty.httpretty.latest_requests
+        assert False  # TODO

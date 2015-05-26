@@ -2,6 +2,12 @@ import json
 import httpretty
 
 
+class HeaderMatcher(object):
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+
 class EndpointMockBuilder(object):
     def __init__(self, method, endpoint, default_headers, fixture_loader):
         self.method, self.endpoint = method, endpoint
@@ -9,6 +15,7 @@ class EndpointMockBuilder(object):
         self.return_headers = default_headers or {}
         self.return_body = None
         self.fixture_loader = fixture_loader
+        self.matchers = []
 
     def should_return(self, code, headers, body):
         self.return_code = code
@@ -35,6 +42,10 @@ class EndpointMockBuilder(object):
 
     def should_return_json(self, json_object):
         self.return_body = json.dumps(json_object)
+        return self
+
+    def with_header(self, key, value):
+        self.matchers.append(HeaderMatcher(key, value))
         return self
 
     def register(self):
