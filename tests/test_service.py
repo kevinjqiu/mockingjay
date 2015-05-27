@@ -5,13 +5,15 @@ test_mockingjay
 Tests for `mockingjay` module.
 """
 
+import re
 import requests
 import httpretty
 import pytest
 import os.path
 
 from mockingjay.service import (
-    MockService, _parse_endpoint, InvalidEndpointSpecException)
+    MockService, _parse_endpoint, _get_host_from_raw_request,
+    InvalidEndpointSpecException)
 
 
 def test_parse_endpoint_valid_format():
@@ -37,7 +39,21 @@ def test_parse_endpoint_invalid_format():
     yield assert_invalid_format, "GOT /v1/users"
 
 
-class TestMockingjay(object):
+def test_get_host_from_raw_request():
+    raw_request = (
+        "POST /user HTTP/1.1\r\n"
+        "Host: localhost:1234\r\n"
+        "Accpet: application/json\r\n"
+        "Content-Length: 0\r\n"
+        "Accept-Encoding: gzip, deflate, compress\r\n"
+        "Accept: */*\r\n"
+        "User-Agent: python-requests/2.2.1 CPython/2.7.3 Linux/2.6.18-308.el5"
+    )
+
+    assert 'localhost:1234' == _get_host_from_raw_request(raw_request)
+
+
+class TestResponseBuilder(object):
 
     @httpretty.activate
     def test_post_without_header_match(self):
@@ -129,3 +145,116 @@ class TestMockingjay(object):
         response = requests.get('http://localhost:1234/user/1')
         assert response.status_code == 404
         assert response.json() == {'error': 'not found'}
+
+
+class TestRequestMatcher(object):
+    def setup(self):
+        self.service = MockService('http://localhost:1234')
+
+    def request_match_setup(self, builder_method, builder_args, req_kwargs):
+        endpt = self.service.endpoint('POST /user')
+        getattr(endpt, builder_method)(*builder_args) \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user', **req_kwargs)
+
+    def assert_request_match(self, builder_method, builder_args, req_kwargs):
+        self.request_match_setup(builder_method, builder_args, req_kwargs)
+        self.service.assert_requests_matched()
+
+    def assert_request_not_match(
+            self, builder_method, builder_args, req_kwargs):
+        self.request_match_setup(builder_method, builder_args, req_kwargs)
+        with pytest.raises(AssertionError):
+            self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_header_match(self):
+        self.assert_request_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'abcd'),
+            {"headers": {'X-CorrelationId': 'abcd'}})
+
+    @httpretty.activate
+    def test_request_header_pattern_match(self):
+        self.assert_request_match(
+            'expect_request_header',
+            ('X-CorrelationId', re.compile('ab.d')),
+            {"headers": {'X-CorrelationId': 'abcd'}})
+
+    @httpretty.activate
+    def test_request_header_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'abcd'),
+            {"headers": {'X-CorrelationId': 'beef'}})
+
+    @httpretty.activate
+    def test_request_header_pattern_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'ab.d'),
+            {"headers": {'X-CorrelationId': 'abd'}})
+
+    @httpretty.activate
+    def test_request_body_match(self):
+        self.assert_request_match(
+            'expect_request_body',
+            ('foo=bar',),
+            {"data": "foo=bar"})
+
+    @httpretty.activate
+    def test_request_body_match_pattern(self):
+        self.assert_request_match(
+            'expect_request_body',
+            (re.compile('foo=(\w+)'),),
+            {"data": "foo=quux"})
+
+    @httpretty.activate
+    def test_request_body_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_body',
+            ('foo=1',),
+            {"data": "foo=quux"})
+
+    @httpretty.activate
+    def test_request_body_pattern_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_body',
+            ('foo=(\w+)',),
+            {"data": "foo=5"})
+
+    @httpretty.activate
+    def test_request_user_match(self):
+        self.assert_request_match(
+            'expect_request_user',
+            ('admin', 'admin',),
+            {'auth': ('admin', 'admin')})
+
+    @httpretty.activate
+    def test_request_user_nopwd_match(self):
+        self.assert_request_match(
+            'expect_request_user',
+            ('admin',),
+            {'auth': ('admin', '')})
+
+    @httpretty.activate
+    def test_request_user_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_user',
+            ('admin:pwd',),
+            {'auth': ('admin', 'admin')})
+
+    @httpretty.activate
+    def test_request_content_type_match(self):
+        self.assert_request_match(
+            'expect_request_content_type',
+            ('application/x-pdf',),
+            {'headers': {'content-type': 'application/x-pdf'}})
+
+    @httpretty.activate
+    def test_request_content_type_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_content_type',
+            ('application/json',),
+            {'headers': {'content-type': 'application/x-pdf'}})
