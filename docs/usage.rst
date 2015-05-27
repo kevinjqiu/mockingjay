@@ -83,3 +83,18 @@ Mock the response using the template::
     service.endpoint('GET /v1/tokens/some_token') \
         .should_return_body_from_fixture('token.json', id="tok_166TGW2jyvokPAPl2u7xKy0v") \
         .register()
+
+--------------
+Assert request 
+--------------
+
+Mockingjay also has the ability to automatically assert certain aspects of the request.  For example, if your application is talking to the Stripe API, and you want to mock out the charge endpoint.  As shown above, it's easy to do so with the ``should_return_*`` methods to build up the response, but you may also want to assert that the request is made with certain authentication headers or the request body, so that you know your code is calling the external API with the right parameters and so on.
+
+To use the automatic request assertion, you can specify what the request should look like during the endpoint building stage::
+
+    service.endpoint('POST /v1/charge') \
+        .expect_request_body('amount=400&currency=usd') \
+        .register()
+    service.assert_requests_matched()
+
+``assert_requests_matched`` call will look at the requests made while httpretty is activated, find the matching requests based on the URI and check if the body matches the expected.

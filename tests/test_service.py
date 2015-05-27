@@ -133,7 +133,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_header_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_header('X-CorrelationId', 'abcd') \
+            .expect_request_header('X-CorrelationId', 'abcd') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
@@ -143,7 +143,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_header_pattern_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_header(
+            .expect_request_header(
                 'X-CorrelationId',
                 re.compile('ab.d')) \
             .should_return(200, {}, '{}') \
@@ -155,7 +155,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_header_not_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_header('X-CorrelationId', 'abcd') \
+            .expect_request_header('X-CorrelationId', 'abcd') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
@@ -166,7 +166,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_header_pattern_not_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_header('X-CorrelationId', 'ab.d') \
+            .expect_request_header('X-CorrelationId', 'ab.d') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
@@ -177,7 +177,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_body_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_body('foo=bar') \
+            .expect_request_body('foo=bar') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
@@ -187,7 +187,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_body_match_pattern(self):
         self.service.endpoint('POST /user') \
-            .with_request_body(
+            .expect_request_body(
                 re.compile('foo=(\w+)')) \
             .should_return(200, {}, '{}') \
             .register()
@@ -198,7 +198,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_body_not_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_body('foo=1') \
+            .expect_request_body('foo=1') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
@@ -209,7 +209,7 @@ class TestRequestMatcher(object):
     @httpretty.activate
     def test_request_body_pattern_not_match(self):
         self.service.endpoint('POST /user') \
-            .with_request_body(
+            .expect_request_body(
                 re.compile('foo=(\w+)')) \
             .should_return(200, {}, '{}') \
             .register()

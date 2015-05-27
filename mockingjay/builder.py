@@ -39,11 +39,11 @@ class EndpointMockBuilder(object):
         self.return_body = json.dumps(json_object)
         return self
 
-    def with_request_header(self, key, value):
+    def expect_request_header(self, key, value):
         self.matchers.append(HeaderMatcher(key, value))
         return self
 
-    def with_request_body(self, body):
+    def expect_request_body(self, body):
         self.matchers.append(BodyMatcher(body))
         return self
 
