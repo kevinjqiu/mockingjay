@@ -3,3 +3,4 @@ pytest
 requests
 debug
 pytest-cov
+coveralls
