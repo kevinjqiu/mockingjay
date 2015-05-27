@@ -93,6 +93,7 @@ Mockingjay also has the ability to automatically assert certain aspects of the r
 To use the automatic request assertion, you can specify what the request should look like during the endpoint building stage::
 
     service.endpoint('POST /v1/charge') \
+        .expect_request_user('sk_test_BQokikJOvBiI2HlWgH4olfQ2') \
         .expect_request_body('amount=400&currency=usd') \
         .register()
     service.assert_requests_matched()
