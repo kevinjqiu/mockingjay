@@ -141,6 +141,18 @@ class TestRequestMatcher(object):
         self.service.assert_requests_matched()
 
     @httpretty.activate
+    def test_request_header_pattern_match(self):
+        self.service.endpoint('POST /user') \
+            .with_request_header(
+                'X-CorrelationId',
+                re.compile('ab.d')) \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      headers={'X-CorrelationId': 'abcd'})
+        self.service.assert_requests_matched()
+
+    @httpretty.activate
     def test_request_header_not_match(self):
         self.service.endpoint('POST /user') \
             .with_request_header('X-CorrelationId', 'abcd') \
@@ -148,6 +160,17 @@ class TestRequestMatcher(object):
             .register()
         requests.post('http://localhost:1234/user',
                       headers={'X-CorrelationId': 'beef'})
+        with pytest.raises(AssertionError):
+            self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_header_pattern_not_match(self):
+        self.service.endpoint('POST /user') \
+            .with_request_header('X-CorrelationId', 'ab.d') \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      headers={'X-CorrelationId': 'abd'})
         with pytest.raises(AssertionError):
             self.service.assert_requests_matched()
 
