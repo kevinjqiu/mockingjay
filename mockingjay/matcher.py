@@ -1,4 +1,5 @@
 import abc
+import base64
 import re
 
 
@@ -43,6 +44,28 @@ class HeaderMatcher(Matcher):
 
     def assert_request_matched(self, request):
         assert request.headers.get(self.key) == self.value
+
+
+class ContentTypeMatcher(HeaderMatcher):
+    """
+    Matcher for the request's content type
+    """
+    def __init__(self, content_type):
+        super(ContentTypeMatcher, self).__init__('content-type', content_type)
+
+
+class BasicAuthUserMatcher(HeaderMatcher):
+    """
+    Matcher for the request's basic auth user
+    """
+    def __init__(self, user, password):
+        value = user
+        if password is not None:
+            value += ":%s" % password
+        self.key = 'authorization'
+        # expect an exact match
+        # therefore, not wrapping it in StringOrPattern
+        self.value = 'Basic %s' % base64.b64encode(value)
 
 
 class BodyMatcher(Matcher):

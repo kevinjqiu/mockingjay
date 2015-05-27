@@ -1,6 +1,7 @@
 import json
 import httpretty
-from .matcher import BodyMatcher, HeaderMatcher
+from .matcher import (
+    BodyMatcher, HeaderMatcher, ContentTypeMatcher, BasicAuthUserMatcher)
 
 
 class EndpointMockBuilder(object):
@@ -47,14 +48,19 @@ class EndpointMockBuilder(object):
         self.matchers.append(BodyMatcher(body))
         return self
 
+    def expect_request_content_type(self, content_type):
+        self.matchers.append(ContentTypeMatcher(content_type))
+        return self
+
+    def expect_request_user(self, user, password=None):
+        self.matchers.append(BasicAuthUserMatcher(user, password))
+        return self
+
     def register(self):
         httpretty.register_uri(
             self.method, self.endpoint, body=self.return_body,
             adding_headers=self.return_headers, status=self.return_code)
 
     def matches(self, request):
-        """
-        Returns ``True`` if the request satisfies all matchers
-        """
         for matcher in self.matchers:
             matcher.assert_request_matched(request)

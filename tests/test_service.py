@@ -130,89 +130,103 @@ class TestRequestMatcher(object):
     def setup(self):
         self.service = MockService('http://localhost:1234')
 
-    @httpretty.activate
-    def test_request_header_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_header('X-CorrelationId', 'abcd') \
+    def request_match_setup(self, builder_method, builder_args, req_kwargs):
+        endpt = self.service.endpoint('POST /user')
+        getattr(endpt, builder_method)(*builder_args) \
             .should_return(200, {}, '{}') \
             .register()
-        requests.post('http://localhost:1234/user',
-                      headers={'X-CorrelationId': 'abcd'})
+        requests.post('http://localhost:1234/user', **req_kwargs)
+
+    def assert_request_match(self, builder_method, builder_args, req_kwargs):
+        self.request_match_setup(builder_method, builder_args, req_kwargs)
         self.service.assert_requests_matched()
+
+    def assert_request_not_match(
+            self, builder_method, builder_args, req_kwargs):
+        self.request_match_setup(builder_method, builder_args, req_kwargs)
+        with pytest.raises(AssertionError):
+            self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_header_match(self):
+        self.assert_request_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'abcd'),
+            {"headers": {'X-CorrelationId': 'abcd'}})
 
     @httpretty.activate
     def test_request_header_pattern_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_header(
-                'X-CorrelationId',
-                re.compile('ab.d')) \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      headers={'X-CorrelationId': 'abcd'})
-        self.service.assert_requests_matched()
+        self.assert_request_match(
+            'expect_request_header',
+            ('X-CorrelationId', re.compile('ab.d')),
+            {"headers": {'X-CorrelationId': 'abcd'}})
 
     @httpretty.activate
     def test_request_header_not_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_header('X-CorrelationId', 'abcd') \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      headers={'X-CorrelationId': 'beef'})
-        with pytest.raises(AssertionError):
-            self.service.assert_requests_matched()
+        self.assert_request_not_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'abcd'),
+            {"headers": {'X-CorrelationId': 'beef'}})
 
     @httpretty.activate
     def test_request_header_pattern_not_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_header('X-CorrelationId', 'ab.d') \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      headers={'X-CorrelationId': 'abd'})
-        with pytest.raises(AssertionError):
-            self.service.assert_requests_matched()
+        self.assert_request_not_match(
+            'expect_request_header',
+            ('X-CorrelationId', 'ab.d'),
+            {"headers": {'X-CorrelationId': 'abd'}})
 
     @httpretty.activate
     def test_request_body_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_body('foo=bar') \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      data='foo=bar')
-        self.service.assert_requests_matched()
+        self.assert_request_match(
+            'expect_request_body',
+            ('foo=bar',),
+            {"data": "foo=bar"})
 
     @httpretty.activate
     def test_request_body_match_pattern(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_body(
-                re.compile('foo=(\w+)')) \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      data='foo=quux')
-        self.service.assert_requests_matched()
+        self.assert_request_match(
+            'expect_request_body',
+            (re.compile('foo=(\w+)'),),
+            {"data": "foo=quux"})
 
     @httpretty.activate
     def test_request_body_not_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_body('foo=1') \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      data='foo=quux')
-        with pytest.raises(AssertionError):
-            self.service.assert_requests_matched()
+        self.assert_request_not_match(
+            'expect_request_body',
+            ('foo=1',),
+            {"data": "foo=quux"})
 
     @httpretty.activate
     def test_request_body_pattern_not_match(self):
-        self.service.endpoint('POST /user') \
-            .expect_request_body(
-                re.compile('foo=(\w+)')) \
-            .should_return(200, {}, '{}') \
-            .register()
-        requests.post('http://localhost:1234/user',
-                      data='foo=5')
-        self.service.assert_requests_matched()
+        self.assert_request_not_match(
+            'expect_request_body',
+            ('foo=(\w+)',),
+            {"data": "foo=5"})
+
+    @httpretty.activate
+    def test_request_user_match(self):
+        self.assert_request_match(
+            'expect_request_user',
+            ('admin:admin',),
+            {'auth': ('admin', 'admin')})
+
+    @httpretty.activate
+    def test_request_user_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_user',
+            ('admin:pwd',),
+            {'auth': ('admin', 'admin')})
+
+    @httpretty.activate
+    def test_request_content_type_match(self):
+        self.assert_request_match(
+            'expect_request_content_type',
+            ('application/x-pdf',),
+            {'headers': {'content-type': 'application/x-pdf'}})
+
+    @httpretty.activate
+    def test_request_content_type_not_match(self):
+        self.assert_request_not_match(
+            'expect_request_content_type',
+            ('application/json',),
+            {'headers': {'content-type': 'application/x-pdf'}})
