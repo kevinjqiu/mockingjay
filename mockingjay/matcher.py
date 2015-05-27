@@ -59,9 +59,7 @@ class BasicAuthUserMatcher(HeaderMatcher):
     Matcher for the request's basic auth user
     """
     def __init__(self, user, password):
-        value = user
-        if password is not None:
-            value += ":%s" % password
+        value = "%s:%s" % (user, '' if not password else password)
         self.key = 'authorization'
         # expect an exact match
         # therefore, not wrapping it in StringOrPattern

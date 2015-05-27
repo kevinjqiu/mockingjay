@@ -207,8 +207,15 @@ class TestRequestMatcher(object):
     def test_request_user_match(self):
         self.assert_request_match(
             'expect_request_user',
-            ('admin:admin',),
+            ('admin', 'admin',),
             {'auth': ('admin', 'admin')})
+
+    @httpretty.activate
+    def test_request_user_nopwd_match(self):
+        self.assert_request_match(
+            'expect_request_user',
+            ('admin',),
+            {'auth': ('admin', '')})
 
     @httpretty.activate
     def test_request_user_not_match(self):
