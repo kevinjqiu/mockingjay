@@ -1,14 +1,6 @@
 import json
 import httpretty
-
-
-class HeaderMatcher(object):
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-
-    def assert_request_matched(self, request):
-        assert request.headers.get(self.key) == self.value
+from .matcher import BodyMatcher, HeaderMatcher
 
 
 class EndpointMockBuilder(object):
@@ -47,8 +39,12 @@ class EndpointMockBuilder(object):
         self.return_body = json.dumps(json_object)
         return self
 
-    def with_header(self, key, value):
+    def with_request_header(self, key, value):
         self.matchers.append(HeaderMatcher(key, value))
+        return self
+
+    def with_request_body(self, body):
+        self.matchers.append(BodyMatcher(body))
         return self
 
     def register(self):

@@ -76,7 +76,7 @@ class MockService(object):
         """
         self.endpoints.clear()
 
-    def assert_request_matched(self):
+    def assert_requests_matched(self):
         requests = [
             request for request in httpretty.httpretty.latest_requests
             if _get_service_prefix_from_request(request) == self.service_prefix

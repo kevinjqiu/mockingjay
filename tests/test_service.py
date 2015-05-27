@@ -5,6 +5,7 @@ test_mockingjay
 Tests for `mockingjay` module.
 """
 
+import re
 import requests
 import httpretty
 import pytest
@@ -126,25 +127,69 @@ class TestResponseBuilder(object):
 
 
 class TestRequestMatcher(object):
+    def setup(self):
+        self.service = MockService('http://localhost:1234')
+
     @httpretty.activate
     def test_request_header_match(self):
-        service = MockService('http://localhost:1234')
-        service.endpoint('POST /user') \
-            .with_header('X-CorrelationId', 'abcd') \
+        self.service.endpoint('POST /user') \
+            .with_request_header('X-CorrelationId', 'abcd') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
                       headers={'X-CorrelationId': 'abcd'})
-        service.assert_request_matched()
+        self.service.assert_requests_matched()
 
     @httpretty.activate
     def test_request_header_not_match(self):
-        service = MockService('http://localhost:1234')
-        service.endpoint('POST /user') \
-            .with_header('X-CorrelationId', 'abcd') \
+        self.service.endpoint('POST /user') \
+            .with_request_header('X-CorrelationId', 'abcd') \
             .should_return(200, {}, '{}') \
             .register()
         requests.post('http://localhost:1234/user',
                       headers={'X-CorrelationId': 'beef'})
         with pytest.raises(AssertionError):
-            service.assert_request_matched()
+            self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_body_match(self):
+        self.service.endpoint('POST /user') \
+            .with_request_body('foo=bar') \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      data='foo=bar')
+        self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_body_match_pattern(self):
+        self.service.endpoint('POST /user') \
+            .with_request_body(
+                re.compile('foo=(\w+)')) \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      data='foo=quux')
+        self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_body_not_match(self):
+        self.service.endpoint('POST /user') \
+            .with_request_body('foo=1') \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      data='foo=quux')
+        with pytest.raises(AssertionError):
+            self.service.assert_requests_matched()
+
+    @httpretty.activate
+    def test_request_body_pattern_not_match(self):
+        self.service.endpoint('POST /user') \
+            .with_request_body(
+                re.compile('foo=(\w+)')) \
+            .should_return(200, {}, '{}') \
+            .register()
+        requests.post('http://localhost:1234/user',
+                      data='foo=5')
+        self.service.assert_requests_matched()
