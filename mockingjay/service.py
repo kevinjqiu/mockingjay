@@ -15,7 +15,7 @@ VALID_METHODS = set([
 
 def _parse_endpoint(spec):
     try:
-        method_str, endpoint = spec.strip().split(' ')
+        method_str, endpoint = str(spec).strip().split(' ')
     except ValueError:
         raise InvalidEndpointSpecException()
     else:
@@ -28,7 +28,7 @@ def _parse_endpoint(spec):
 def _get_host_from_raw_request(raw_request):
     for line in raw_request.splitlines():
         try:
-            key, value = line.split(':', 1)
+            key, value = str(line).split(':', 1)
         except ValueError:
             pass
         else:
@@ -38,7 +38,7 @@ def _get_host_from_raw_request(raw_request):
 
 
 def _get_scheme_from_protocol_version(protocol_version):
-    return protocol_version.split('/')[0].lower()
+    return str(protocol_version).split('/')[0].lower()
 
 
 def _get_service_prefix_from_request(request):
