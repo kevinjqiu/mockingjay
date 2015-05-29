@@ -29,4 +29,6 @@ Features
 Usage
 =====
 
-See :ref:`usage`
+See `usage.rst`_.
+
+.. _usage.rst: docs/usage.rst
