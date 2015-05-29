@@ -23,3 +23,10 @@ Features
 
 * Provides a fluent interface for building service mocks using HTTPretty
 * Allows mocking of response body using templated fixtures
+* Automatic assertion of request attributes (headers, body, etc)
+
+
+Usage
+=====
+
+See :ref:`usage`
